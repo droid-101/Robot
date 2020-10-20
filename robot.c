@@ -3,10 +3,10 @@
 #define LEFT_SENSOR_CHANNEL  2
 #define RIGHT_SENSOR_CHANNEL 1
 
-#define LEFT_MOTOR_FORWARD RB5
-#define LEFT_MOTOR_REVERSE RB4
-#define RIGHT_MOTOR_FORWARD  RB6
-#define RIGHT_MOTOR_REVERSE  RB7
+#define RIGHT_MOTOR_FORWARD  RB4
+#define RIGHT_MOTOR_REVERSE  RB5
+#define LEFT_MOTOR_FORWARD   RB7
+#define LEFT_MOTOR_REVERSE   RB6
 
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
@@ -19,6 +19,8 @@ void forward(void);
 void reverse(void);
 void turn_left(void);
 void turn_right(void);
+void test(void);
+void drive(void);
 
 void main(void)
 {
@@ -34,22 +36,27 @@ void main(void)
 
     while(!(RA4 == 1 && RA5 == 1))
     {
-        if (get_sensor(RIGHT) > 100)
-        {
-            turn_right();
-        }
-        else if (get_sensor(LEFT) > 100)
-        {
-            turn_left();
-        }
-        else if (get_sensor(RIGHT) < 100 && get_sensor(LEFT) < 100)
-        {
-            forward();
-        }
-        else
-        {
-            stop();
-        }
+        drive();
+    }
+}
+
+void drive(void)
+{
+    if (get_sensor(RIGHT) > 100)
+    {
+        turn_right();
+    }
+    else if (get_sensor(LEFT) > 100)
+    {
+        turn_left();
+    }
+    else if (get_sensor(RIGHT) < 100 && get_sensor(LEFT) < 100)
+    {
+        forward();
+    }
+    else
+    {
+        stop();
     }
 }
 
@@ -79,18 +86,23 @@ void stop(void)
 
 void forward(void)
 {
+    RIGHT_MOTOR_FORWARD = 1;
+    RIGHT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_FORWARD = 1;
+    LEFT_MOTOR_REVERSE = 0;
+}
+
+void reverse(void)
+{
     RIGHT_MOTOR_FORWARD = 0;
     RIGHT_MOTOR_REVERSE = 1;
     LEFT_MOTOR_FORWARD = 0;
     LEFT_MOTOR_REVERSE = 1;
 }
 
-void reverse(void)
+void test(void)
 {
-    RIGHT_MOTOR_FORWARD = 1;
-    RIGHT_MOTOR_REVERSE = 0;
-    LEFT_MOTOR_FORWARD = 1;
-    LEFT_MOTOR_REVERSE = 0;
+    // PUT TEST CODE HERE
 }
 
 int get_sensor(enum Sensor side)

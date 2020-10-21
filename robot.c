@@ -8,9 +8,12 @@
 #define LEFT_MOTOR_FORWARD   RB7
 #define LEFT_MOTOR_REVERSE   RB6
 
+#define LIGHT_THRESHOLD      40
+
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
 enum Sensor {RIGHT, LEFT};
+enum Direction {CLOCKWISE, COUNTER_CLOCKWISE};
 
 void init_hardware(void);
 int get_sensor(enum Sensor side);
@@ -20,50 +23,123 @@ void reverse(void);
 void turn_left(void);
 void turn_right(void);
 void test(void);
-void drive(void);
+void drive(enum Direction direction);
+void read_marker(enum Direction direction);
+void read_barcode(void);
+void disable(void);
+
+unsigned int left_sensor_value = 0;
+unsigned int right_sensor_value = 0;
+unsigned int location_counter = 0;
 
 void main(void)
 {
     init_hardware();
-    stop();
 
     TRISA = 0b00110110;
 
-    ADFM = 1;
+    ADCON0 = 0b00000001;
+
     ANSEL = 0b00000110;
 
-    ADCON0 = 0b00000001;
+    OSCCON = 0b01100001;
+    _delay(1000000);
+
+    disable();
 
     while(!(RA4 == 1 && RA5 == 1))
     {
-        drive();
+        if (RA4 == 1)
+        {
+            disable();
+            break;
+        }
+
+        while (location_counter < 2)
+        {
+            left_sensor_value = get_sensor(LEFT);
+            right_sensor_value = get_sensor(RIGHT);
+            drive(CLOCKWISE);
+        }
+
+        PORTC = 0b00000000;
+
+        disable();
     }
 }
 
-void drive(void)
+void read_barcode(void)
 {
-    if (get_sensor(RIGHT) > 100)
+
+}
+
+void disable(void)
+{
+    stop();
+    while (RA5 != 1);
+}
+
+void read_marker(enum Direction direction)
+{
+    if (direction == CLOCKWISE)
     {
+        location_counter++;
+        stop();
+        _delay(1000000);
         turn_right();
+        _delay(250000);
     }
-    else if (get_sensor(LEFT) > 100)
+    else if (direction == COUNTER_CLOCKWISE)
     {
+        location_counter++;
+        stop();
+        _delay(1000000);
         turn_left();
+        _delay(150000);
     }
-    else if (get_sensor(RIGHT) < 100 && get_sensor(LEFT) < 100)
+}
+
+void drive(enum Direction direction)
+{
+    if (right_sensor_value > LIGHT_THRESHOLD && direction == CLOCKWISE)
     {
+        // RC0 = 1;
+        // RC1 = 0;
+        turn_right();
+
+        if (left_sensor_value > LIGHT_THRESHOLD)
+        {
+            read_marker(direction);
+        }
+    }
+    else if (left_sensor_value > LIGHT_THRESHOLD && direction == COUNTER_CLOCKWISE)
+    {
+        // RC0 = 0;
+        // RC1 = 1;
+        turn_left();
+
+        if (right_sensor_value > LIGHT_THRESHOLD)
+        {
+            read_marker(direction);
+        }
+    }
+    else if (right_sensor_value < LIGHT_THRESHOLD && left_sensor_value < LIGHT_THRESHOLD)
+    {
+        // RC0 = 0;
+        // RC1 = 0;
         forward();
     }
-    else
-    {
-        stop();
-    }
+    // else if (right_sensor_value > LIGHT_THRESHOLD && left_sensor_value > LIGHT_THRESHOLD)
+    // {
+    //     RC0 = 1;
+    //     RC1 = 1;
+    // }
 }
 
 void turn_right(void)
 {
     RIGHT_MOTOR_FORWARD = 0;
-    RIGHT_MOTOR_REVERSE = 0;
+    RIGHT_MOTOR_REVERSE = 1;
     LEFT_MOTOR_FORWARD = 1;
     LEFT_MOTOR_REVERSE = 0;
 }
@@ -73,7 +149,7 @@ void turn_left(void)
     RIGHT_MOTOR_FORWARD = 1;
     RIGHT_MOTOR_REVERSE = 0;
     LEFT_MOTOR_FORWARD = 0;
-    LEFT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_REVERSE = 1;
 }
 
 void stop(void)

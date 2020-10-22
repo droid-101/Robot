@@ -9,6 +9,7 @@
 #define LEFT_MOTOR_REVERSE   RB6
 
 #define SENSOR_THRESHOLD     50
+#define STARTING_MARKERS     2
 
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
@@ -23,9 +24,13 @@ void turn_left(void);
 void turn_right(void);
 void test(void);
 void drive(void);
+void count_marker(void);
+void start(void);
 
 unsigned int left_sensor = 0;
 unsigned int right_sensor = 0;
+signed char marker_count = 0;
+signed char markers_to_destination = 0;
 
 void main(void)
 {
@@ -37,25 +42,66 @@ void main(void)
 
     ADCON0 = 0b00000001;
 
-    while(!(RA4 == 1 && RA5 == 1))
+    while((RA5 == 0))
     {
+        left_sensor = 0;
+        right_sensor = 0;
+        marker_count = 0;
+
         left_sensor = get_sensor(LEFT);
         right_sensor = get_sensor(RIGHT);
-        drive();
 
-        // test();
+        while (RA5 == 0);
+        _delay(1000000);
+
+        start();
+
+        markers_to_destination = 4;
+
+        while (marker_count < markers_to_destination)
+        {
+            drive();
+            count_marker();
+        }
+
+        stop();
+        PORTC = 0;
     }
+}
+
+void start(void)
+{
+    while (marker_count < STARTING_MARKERS)
+    {
+        drive();
+        count_marker();
+    }
+
+    marker_count = 0;
+}
+
+void count_marker(void)
+{
+    if (left_sensor > SENSOR_THRESHOLD)
+    {
+        marker_count++;
+        while(get_sensor(LEFT) > SENSOR_THRESHOLD)
+        {
+            drive();
+        }
+    }
+
+    PORTC = marker_count;
 }
 
 void drive(void)
 {
+    left_sensor = get_sensor(LEFT);
+    right_sensor = get_sensor(RIGHT);
+
     if (right_sensor > SENSOR_THRESHOLD)
     {
         turn_right();
-    }
-    else if (left_sensor > SENSOR_THRESHOLD)
-    {
-        // turn_left();
     }
     else if (right_sensor < SENSOR_THRESHOLD && left_sensor < SENSOR_THRESHOLD)
     {

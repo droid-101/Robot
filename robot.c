@@ -9,7 +9,6 @@
 #define LEFT_MOTOR_REVERSE   RB6
 
 #define SENSOR_THRESHOLD     50
-#define STARTING_MARKERS     2
 
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
@@ -22,10 +21,16 @@ void forward(void);
 void reverse(void);
 void turn_left(void);
 void turn_right(void);
+void swing_right(void);
+void swing_left(void);
+void reverse_right(void);
+void reverse_left(void);
 void test(void);
 void drive(void);
 void count_marker(void);
 void start(void);
+void enter_barcode(void);
+void adjust_position(void);
 
 unsigned int left_sensor = 0;
 unsigned int right_sensor = 0;
@@ -56,7 +61,7 @@ void main(void)
 
         start();
 
-        markers_to_destination = 4;
+        markers_to_destination = 2;
 
         while (marker_count < markers_to_destination)
         {
@@ -64,20 +69,79 @@ void main(void)
             count_marker();
         }
 
+        enter_barcode();
+
+        adjust_position();
+
         stop();
         PORTC = 0;
     }
 }
 
-void start(void)
+
+
+void adjust_position(void)
 {
-    while (marker_count < STARTING_MARKERS)
+    forward();
+    _delay(500000);
+
+    while (get_sensor(RIGHT) < SENSOR_THRESHOLD)
     {
-        drive();
-        count_marker();
+        turn_right();
     }
 
-    marker_count = 0;
+    stop();
+
+    while (get_sensor(RIGHT) < SENSOR_THRESHOLD && get_sensor(LEFT) < SENSOR_THRESHOLD)
+    {
+        forward();
+    }
+
+    stop();
+
+    while (get_sensor(LEFT) < SENSOR_THRESHOLD)
+    {
+        swing_right();
+    }
+
+    stop();
+
+    while (get_sensor(RIGHT) < SENSOR_THRESHOLD)
+    {
+        swing_left();
+    }
+
+    stop();
+
+    if (get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD)
+    {
+        stop();
+    }
+}
+
+void enter_barcode(void)
+{
+    while (!(get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD))
+    {
+        drive();
+    }
+
+    stop();
+}
+
+void start(void)
+{
+    while (get_sensor(RIGHT) < SENSOR_THRESHOLD && get_sensor(LEFT) < SENSOR_THRESHOLD)
+    {
+        forward();
+    }
+
+    _delay(500000);
+
+    while (get_sensor(RIGHT) < SENSOR_THRESHOLD)
+    {
+        turn_right();
+    }
 }
 
 void count_marker(void)
@@ -107,6 +171,39 @@ void drive(void)
     {
         forward();
     }
+}
+
+void reverse_right(void)
+{
+    RIGHT_MOTOR_FORWARD = 0;
+    RIGHT_MOTOR_REVERSE = 1;
+    LEFT_MOTOR_FORWARD = 0;
+    LEFT_MOTOR_REVERSE = 0;
+}
+
+
+void reverse_left(void)
+{
+    RIGHT_MOTOR_FORWARD = 0;
+    RIGHT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_FORWARD = 0;
+    LEFT_MOTOR_REVERSE = 1;
+}
+
+void swing_right(void)
+{
+    RIGHT_MOTOR_FORWARD = 0;
+    RIGHT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_FORWARD = 1;
+    LEFT_MOTOR_REVERSE = 0;
+}
+
+void swing_left(void)
+{
+    RIGHT_MOTOR_FORWARD = 1;
+    RIGHT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_FORWARD = 0;
+    LEFT_MOTOR_REVERSE = 0;
 }
 
 void turn_right(void)

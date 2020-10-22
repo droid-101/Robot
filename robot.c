@@ -8,6 +8,8 @@
 #define LEFT_MOTOR_FORWARD   RB7
 #define LEFT_MOTOR_REVERSE   RB6
 
+#define SENSOR_THRESHOLD     50
+
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
 enum Sensor {RIGHT, LEFT};
@@ -22,48 +24,49 @@ void turn_right(void);
 void test(void);
 void drive(void);
 
+unsigned int left_sensor = 0;
+unsigned int right_sensor = 0;
+
 void main(void)
 {
     init_hardware();
-    stop();
 
     TRISA = 0b00110110;
 
-    ADFM = 1;
     ANSEL = 0b00000110;
 
     ADCON0 = 0b00000001;
 
     while(!(RA4 == 1 && RA5 == 1))
     {
+        left_sensor = get_sensor(LEFT);
+        right_sensor = get_sensor(RIGHT);
         drive();
+
+        // test();
     }
 }
 
 void drive(void)
 {
-    if (get_sensor(RIGHT) > 100)
+    if (right_sensor > SENSOR_THRESHOLD)
     {
         turn_right();
     }
-    else if (get_sensor(LEFT) > 100)
+    else if (left_sensor > SENSOR_THRESHOLD)
     {
-        turn_left();
+        // turn_left();
     }
-    else if (get_sensor(RIGHT) < 100 && get_sensor(LEFT) < 100)
+    else if (right_sensor < SENSOR_THRESHOLD && left_sensor < SENSOR_THRESHOLD)
     {
         forward();
-    }
-    else
-    {
-        stop();
     }
 }
 
 void turn_right(void)
 {
     RIGHT_MOTOR_FORWARD = 0;
-    RIGHT_MOTOR_REVERSE = 0;
+    RIGHT_MOTOR_REVERSE = 1;
     LEFT_MOTOR_FORWARD = 1;
     LEFT_MOTOR_REVERSE = 0;
 }
@@ -73,7 +76,7 @@ void turn_left(void)
     RIGHT_MOTOR_FORWARD = 1;
     RIGHT_MOTOR_REVERSE = 0;
     LEFT_MOTOR_FORWARD = 0;
-    LEFT_MOTOR_REVERSE = 0;
+    LEFT_MOTOR_REVERSE = 1;
 }
 
 void stop(void)

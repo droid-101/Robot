@@ -25,7 +25,7 @@ void turn_right(void);
 void test(void);
 void drive(enum Direction direction);
 void read_marker(enum Direction direction);
-void read_barcode(void);
+int read_barcode(void);
 void disable(void);
 
 unsigned int left_sensor_value = 0;
@@ -42,35 +42,43 @@ void main(void)
 
     ANSEL = 0b00000110;
 
-    OSCCON = 0b01100001;
-    _delay(1000000);
+    OSCCONbits.IRCF = 111;
 
     disable();
 
     while(!(RA4 == 1 && RA5 == 1))
     {
-        if (RA4 == 1)
-        {
-            disable();
-            break;
-        }
-
-        while (location_counter < 2)
+        while (location_counter < 3)
         {
             left_sensor_value = get_sensor(LEFT);
             right_sensor_value = get_sensor(RIGHT);
-            drive(CLOCKWISE);
+            drive(COUNTER_CLOCKWISE);
+
+			PORTC = location_counter;
         }
 
-        PORTC = 0b00000000;
-
-        disable();
+        while (right_sensor_value < LIGHT_THRESHOLD && left_sensor_value < LIGHT_THRESHOLD)
+		{
+			left_sensor_value = get_sensor(LEFT);
+            right_sensor_value = get_sensor(RIGHT);
+			drive(COUNTER_CLOCKWISE);
+		}
     }
 }
 
-void read_barcode(void)
+int read_barcode(void)
 {
+	int counter = 0;
 
+	forward();
+
+	if (right_sensor_value > LIGHT_THRESHOLD && left_sensor_value > LIGHT_THRESHOLD)
+	{
+		counter++;
+		_delay(2500000);
+	}
+
+	return counter;
 }
 
 void disable(void)
@@ -95,7 +103,7 @@ void read_marker(enum Direction direction)
         stop();
         _delay(1000000);
         turn_left();
-        _delay(150000);
+        _delay(250000);
     }
 }
 
@@ -107,7 +115,7 @@ void drive(enum Direction direction)
         // RC1 = 0;
         turn_right();
 
-        if (left_sensor_value > LIGHT_THRESHOLD)
+        if (left_sensor_value > LIGHT_THRESHOLD && location_counter < 3)
         {
             read_marker(direction);
         }
@@ -118,7 +126,7 @@ void drive(enum Direction direction)
         // RC1 = 1;
         turn_left();
 
-        if (right_sensor_value > LIGHT_THRESHOLD)
+        if (right_sensor_value > LIGHT_THRESHOLD && location_counter < 3)
         {
             read_marker(direction);
         }

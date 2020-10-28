@@ -39,15 +39,16 @@ signed char marker_count = 0;
 signed char markers_to_destination = 0;
 signed char barcode = 0;
 signed char width = 0;
+unsigned char destination = 0;
 
 signed char barcode_width [5] = {0, 0, 0, 0, 0};
 
 void main(void)
 {
-    init_hardware();
-
     OSCCONbits.IRCF = 0b111;
     OSCCONbits.SCS = 1;
+
+    init_hardware();
 
     TRISA = 0b00110110;
 
@@ -67,35 +68,26 @@ void main(void)
         right_sensor = get_sensor(RIGHT);
 
         while (RA5 == 0);
-        _delay(1000000);
+        _delay(2000000);
 
         // ================ START =============== //
 
-        //leave();
+        leave();
 
-        //markers_to_destination = 2;
+        markers_to_destination = 2;
 
-        //while (marker_count < markers_to_destination)
-        //{
-        //    drive();
-        //    count_marker();
-        //}
+        while (marker_count < markers_to_destination)
+        {
+           drive();
+           count_marker();
+        }
 
-        // enter();
-        // adjust_position();
+        enter();
+        adjust_position();
 
         scan_barcode();
 
-        stop();
-
-		while(RA5 == 0)
-		{
-			for (int i = 0; i < 5; i++)
-			{
-				PORTC = barcode_width[i];
-				_delay(3000000);
-			}
-		}
+        while (RA5 == 0);
     }
 }
 
@@ -103,7 +95,7 @@ void main(void)
 
 void scan_barcode(void)
 {
-    while (barcode < 5)
+    while (barcode_width[1] < 22 && barcode_width[2] < 22 && barcode_width[3] < 22 && barcode_width[4] < 22)
     {
         width = 0;
 
@@ -134,12 +126,22 @@ void scan_barcode(void)
     }
 
     stop();
+
+    for (int i = 4; i > 0; i--)
+    {
+        if (barcode_width[i] > 22)
+        {
+            destination = --i;
+        }
+    }
+
+    PORTC = destination;
 }
 
 void adjust_position(void)
 {
     forward();
-    _delay(500000);
+    _delay(1000000);
 
     while (get_sensor(RIGHT) < SENSOR_THRESHOLD)
     {
@@ -189,9 +191,17 @@ void adjust_position(void)
 
 void enter(void)
 {
-    while (!(get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD))
+    while (1)
     {
+        left_sensor = get_sensor(LEFT);
+        right_sensor = get_sensor(RIGHT);
+
         drive();
+
+        if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
+        {
+            return;
+        }
     }
 
     stop();

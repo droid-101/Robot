@@ -72,18 +72,18 @@ void main(void)
 
         // ================ START =============== //
 
-        leave();
+        // leave();
 
-        markers_to_destination = 2;
+        // markers_to_destination = 2;
 
-        while (marker_count < markers_to_destination)
-        {
-           drive();
-           count_marker();
-        }
+        // while (marker_count < markers_to_destination)
+        // {
+        //    drive();
+        //    count_marker();
+        // }
 
-        enter();
-        adjust_position();
+        // enter();
+        // adjust_position();
 
         scan_barcode();
 
@@ -136,6 +136,33 @@ void scan_barcode(void)
     }
 
     PORTC = destination;
+
+    _delay(2000000);
+
+    while (1)
+    {
+        while (get_sensor(RIGHT) < SENSOR_THRESHOLD)
+        {
+            swing_left();
+        }
+
+        stop();
+        break;
+    }
+
+    while (1)
+    {
+        left_sensor = get_sensor(LEFT);
+        right_sensor = get_sensor(RIGHT);
+
+        drive();
+
+        if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
+        {
+            stop();
+            break;
+        }
+    }
 }
 
 void adjust_position(void)

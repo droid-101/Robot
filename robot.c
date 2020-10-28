@@ -28,30 +28,40 @@ void reverse_left(void);
 void test(void);
 void drive(void);
 void count_marker(void);
-void start(void);
-void enter_barcode(void);
+void leave(void);
+void enter(void);
 void adjust_position(void);
+void scan_barcode(void);
 
 unsigned int left_sensor = 0;
 unsigned int right_sensor = 0;
 signed char marker_count = 0;
 signed char markers_to_destination = 0;
+signed char barcode = 0;
+signed char width = 0;
+
+signed char barcode_width [5] = {0, 0, 0, 0, 0};
 
 void main(void)
 {
     init_hardware();
+
+    OSCCONbits.IRCF = 0b111;
+    OSCCONbits.SCS = 1;
 
     TRISA = 0b00110110;
 
     ANSEL = 0b00000110;
 
     ADCON0 = 0b00000001;
+	PORTC = 0;
 
     while((RA5 == 0))
     {
         left_sensor = 0;
         right_sensor = 0;
         marker_count = 0;
+        barcode = 0;
 
         left_sensor = get_sensor(LEFT);
         right_sensor = get_sensor(RIGHT);
@@ -59,26 +69,72 @@ void main(void)
         while (RA5 == 0);
         _delay(1000000);
 
-        start();
+        // ================ START =============== //
 
-        markers_to_destination = 2;
+        //leave();
 
-        while (marker_count < markers_to_destination)
-        {
-            drive();
-            count_marker();
-        }
+        //markers_to_destination = 2;
 
-        enter_barcode();
+        //while (marker_count < markers_to_destination)
+        //{
+        //    drive();
+        //    count_marker();
+        //}
 
-        adjust_position();
+        // enter();
+        // adjust_position();
+
+        scan_barcode();
 
         stop();
-        PORTC = 0;
+
+		while(RA5 == 0)
+		{
+			for (int i = 0; i < 5; i++)
+			{
+				PORTC = barcode_width[i];
+				_delay(3000000);
+			}
+		}
     }
 }
 
 
+
+void scan_barcode(void)
+{
+    while (barcode < 5)
+    {
+        width = 0;
+
+        if (get_sensor(LEFT) > SENSOR_THRESHOLD)
+        {
+            forward();
+
+            if (get_sensor(RIGHT) > SENSOR_THRESHOLD)
+            {
+                while (get_sensor(RIGHT) > SENSOR_THRESHOLD)
+                {
+                    width++;
+                    barcode_width[barcode] = width;
+                    _delay(10000);
+                }
+
+                barcode++;
+                PORTC = barcode;
+            }
+        }
+        else if (get_sensor(LEFT) < SENSOR_THRESHOLD)
+        {
+            while(get_sensor(LEFT) < SENSOR_THRESHOLD && get_sensor(RIGHT) < SENSOR_THRESHOLD)
+            {
+                swing_right();
+            }
+        }
+    }
+
+    stop();
+}
 
 void adjust_position(void)
 {
@@ -111,15 +167,27 @@ void adjust_position(void)
         swing_left();
     }
 
-    stop();
+	stop();
+    _delay(1000000);
 
-    if (get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD)
+	while (get_sensor(LEFT) > SENSOR_THRESHOLD)
     {
-        stop();
+        reverse_right();
     }
+
+    stop();
+	_delay(1000000);
+
+    while (get_sensor(LEFT) < SENSOR_THRESHOLD)
+    {
+        reverse_left();
+    }
+
+	stop();
+    _delay(1000000);
 }
 
-void enter_barcode(void)
+void enter(void)
 {
     while (!(get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD))
     {
@@ -129,7 +197,7 @@ void enter_barcode(void)
     stop();
 }
 
-void start(void)
+void leave(void)
 {
     while (get_sensor(RIGHT) < SENSOR_THRESHOLD && get_sensor(LEFT) < SENSOR_THRESHOLD)
     {

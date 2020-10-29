@@ -83,18 +83,18 @@ void main(void)
 
         // ================ START =============== //
 
-        leave(RIGHT);
+        // leave(RIGHT);
 
-        markers_to_destination = 2;
+        // markers_to_destination = 2;
 
-        while (marker_count < markers_to_destination)
-        {
-           drive_right();
-           count_marker(RIGHT);
-        }
+        // while (marker_count < markers_to_destination)
+        // {
+        //    drive_right();
+        //    count_marker(RIGHT);
+        // }
 
-        enter();
-        adjust_position();
+        // enter();
+        // adjust_position();
 
         scan_barcode();
 
@@ -114,21 +114,27 @@ void go_to_destination(unsigned char destination)
     switch (destination)
     {
         case 0:
-            markers_to_destination = 2;
+            markers_to_destination = 1;
             leave(LEFT);
             while (marker_count < markers_to_destination)
             {
                 drive_left();
                 count_marker(LEFT);
             }
-            // while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_left();
-            // }
-            // while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_left();
-            // }
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+            {
+                drive_left();
+            }
+            markers_to_destination = 2;
+            while (marker_count < markers_to_destination)
+            {
+                drive_right();
+                count_marker(RIGHT);
+            }
+            while (!(get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD && get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD))
+            {
+                drive_right();
+            }
 
             stop();
             break;

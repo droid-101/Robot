@@ -16,6 +16,7 @@ enum Sensor {RIGHT, LEFT};
 
 void init_hardware(void);
 int get_sensor(enum Sensor side);
+void reset_barcode_width(void);
 void stop(void);
 void forward(void);
 void reverse(void);
@@ -32,6 +33,8 @@ void leave(void);
 void enter(void);
 void adjust_position(void);
 void scan_barcode(void);
+void go_to_destination(unsigned char destination);
+
 
 unsigned int left_sensor = 0;
 unsigned int right_sensor = 0;
@@ -40,7 +43,6 @@ signed char markers_to_destination = 0;
 signed char barcode = 0;
 signed char width = 0;
 unsigned char destination = 0;
-
 signed char barcode_width [5] = {0, 0, 0, 0, 0};
 
 void main(void)
@@ -63,6 +65,9 @@ void main(void)
         right_sensor = 0;
         marker_count = 0;
         barcode = 0;
+        width = 0;
+        destination = 0;
+        reset_barcode_width();
 
         left_sensor = get_sensor(LEFT);
         right_sensor = get_sensor(RIGHT);
@@ -87,11 +92,41 @@ void main(void)
 
         scan_barcode();
 
-        while (RA5 == 0);
+        go_to_destination(destination);
+
+        // while (RA5 == 0);
     }
 }
 
 
+
+void go_to_destination(unsigned char destination)
+{
+    markers_to_destination = 0;
+    marker_count = 0;
+
+    reverse();
+    _delay(250000);
+    stop();
+
+    leave();
+
+    switch (destination)
+    {
+        case 0:
+            while (marker_count < 2)
+            {
+                drive();
+                count_marker();
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    stop();
+}
 
 void scan_barcode(void)
 {
@@ -236,7 +271,7 @@ void enter(void)
 
 void leave(void)
 {
-    while (get_sensor(RIGHT) < SENSOR_THRESHOLD && get_sensor(LEFT) < SENSOR_THRESHOLD)
+    while (!(get_sensor(RIGHT) > SENSOR_THRESHOLD && get_sensor(LEFT) > SENSOR_THRESHOLD))
     {
         forward();
     }
@@ -251,7 +286,7 @@ void leave(void)
 
 void count_marker(void)
 {
-    if (left_sensor > SENSOR_THRESHOLD)
+    if (get_sensor(LEFT) > SENSOR_THRESHOLD)
     {
         marker_count++;
         while(get_sensor(LEFT) > SENSOR_THRESHOLD)
@@ -354,6 +389,14 @@ void reverse(void)
 void test(void)
 {
     // PUT TEST CODE HERE
+}
+
+void reset_barcode_width(void)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        barcode_width[i] = 0;
+    }
 }
 
 int get_sensor(enum Sensor side)

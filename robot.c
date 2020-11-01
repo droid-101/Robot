@@ -85,21 +85,20 @@ void main(void)
 
         // ================ START =============== //
 
-        //leave(RIGHT);
+        leave(RIGHT);
 
-        //markers_to_destination = 2;
+        markers_to_destination = 2;
 
-        //while (marker_count < markers_to_destination)
-        //{
-        //   drive_right();
-        //   count_marker(RIGHT);
-        //}
+        while (marker_count < markers_to_destination)
+        {
+          drive_right();
+          count_marker(RIGHT);
+        }
 
-        //enter();
-        //adjust_position();
+        enter();
+        adjust_position();
 
         scan_barcode();
-        // destination = 3;
 
         go_to_destination(destination);
 
@@ -154,9 +153,9 @@ void go_to_destination(unsigned char destination)
     {
         case 0:
             reverse_left();
-            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
 
             stop();
 
@@ -172,9 +171,9 @@ void go_to_destination(unsigned char destination)
 
         case 1:
             reverse_right();
-            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
-            while (get_sensor(LEFT) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
 
             markers_to_destination = 2;
             while (marker_count < markers_to_destination)
@@ -188,9 +187,9 @@ void go_to_destination(unsigned char destination)
 
         case 2:
             reverse_left();
-            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
 
             stop();
 
@@ -206,9 +205,9 @@ void go_to_destination(unsigned char destination)
 
         case 3:
             reverse_right();
-            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
-            while (get_sensor(LEFT) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
 
             markers_to_destination = 1;
             while (marker_count < markers_to_destination)
@@ -233,30 +232,19 @@ void scan_barcode(void)
     while (barcode_width[1] < MAX_WIDTH && barcode_width[2] < MAX_WIDTH && barcode_width[3] < MAX_WIDTH && barcode_width[4] < MAX_WIDTH)
     {
         width = 0;
+        forward();
 
-        if (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD)
+        if (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
         {
-            forward();
-
-            if (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
+            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
             {
-                while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
-                {
-                    width++;
-                    barcode_width[barcode] = width;
-                    _delay(10000);
-                }
+                width++;
+                barcode_width[barcode] = width;
+                _delay(10000);
+            }
 
-                barcode++;
-                PORTC = barcode;
-            }
-        }
-        else if (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
-        {
-            while(get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD && get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            {
-                swing_right();
-            }
+            barcode++;
+            PORTC = barcode;
         }
     }
 

@@ -40,7 +40,7 @@ void adjust_position(void);
 void scan_barcode(void);
 void go_to_destination(unsigned char destination);
 void dock(enum Direction direction);
-void go_home(enum Direction direction);
+void go_home(unsigned char destination);
 
 
 unsigned int left_sensor = 0;
@@ -101,12 +101,40 @@ void main(void)
         scan_barcode();
 
         go_to_destination(destination);
+        go_home(destination);
 
-        // while (RA5 == 0);
+        // ================= END ================ //
     }
 }
 
 
+
+void go_home(unsigned char destination)
+{
+    switch (destination)
+    {
+        case 0:
+            turn_right();
+            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+
+            enter();
+
+            forward();
+            _delay(ENTER_EXIT_DELAY);
+
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+            {
+                turn_right();
+            }
+
+            stop();
+            break;
+
+        default:
+            break;
+    }
+}
 
 void dock(enum Direction direction)
 {

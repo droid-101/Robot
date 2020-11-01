@@ -39,6 +39,8 @@ void enter(void);
 void adjust_position(void);
 void scan_barcode(void);
 void go_to_destination(unsigned char destination);
+void dock(enum Direction direction);
+void go_home(enum Direction direction);
 
 
 unsigned int left_sensor = 0;
@@ -83,28 +85,65 @@ void main(void)
 
         // ================ START =============== //
 
-        // leave(RIGHT);
+        //leave(RIGHT);
 
-        // markers_to_destination = 2;
+        //markers_to_destination = 2;
 
-        // while (marker_count < markers_to_destination)
-        // {
-        //    drive_right();
-        //    count_marker(RIGHT);
-        // }
+        //while (marker_count < markers_to_destination)
+        //{
+        //   drive_right();
+        //   count_marker(RIGHT);
+        //}
 
-        // enter();
-        // adjust_position();
+        //enter();
+        //adjust_position();
 
         scan_barcode();
+        // destination = 3;
 
-        go_to_destination(0);
+        go_to_destination(destination);
 
         // while (RA5 == 0);
     }
 }
 
 
+
+void dock(enum Direction direction)
+{
+    if (direction == RIGHT)
+    {
+        forward();
+
+        _delay(ENTER_EXIT_DELAY);
+
+        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+        {
+            turn_right();
+        }
+
+        while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+        {
+            swing_right();
+        }
+    }
+    else if (direction == LEFT)
+    {
+        forward();
+
+        _delay(ENTER_EXIT_DELAY);
+
+        while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+        {
+            turn_left();
+        }
+
+        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+        {
+            swing_left();
+        }
+    }
+}
 
 void go_to_destination(unsigned char destination)
 {
@@ -114,89 +153,71 @@ void go_to_destination(unsigned char destination)
     switch (destination)
     {
         case 0:
-            markers_to_destination = 1;
-            leave(LEFT);
-            while (marker_count < markers_to_destination)
-            {
-                drive_left();
-                count_marker(LEFT);
-            }
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            {
-                drive_left();
-            }
+            reverse_left();
+            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
+
+            stop();
+
             markers_to_destination = 2;
             while (marker_count < markers_to_destination)
             {
                 drive_right();
                 count_marker(RIGHT);
             }
-            while (!(get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD && get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD))
-            {
-                drive_right();
-            }
 
-            stop();
+            dock(LEFT);
             break;
 
         case 1:
+            reverse_right();
+            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+
             markers_to_destination = 2;
-            leave(RIGHT);
-            while (marker_count < markers_to_destination)
-            {
-                drive_right();
-                count_marker(RIGHT);
-            }
-            // while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_left();
-            // }
-            // while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_left();
-            // }
-
-            stop();
-            break;
-
-        case 2:
-            markers_to_destination = 1;
-            leave(RIGHT);
-            while (marker_count < markers_to_destination)
-            {
-                drive_left();
-                count_marker(RIGHT);
-            }
-            // while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_right();
-            // }
-            // while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_right();
-            // }
-
-            stop();
-            break;
-
-        case 3:
-            markers_to_destination = 3;
-            leave(LEFT);
             while (marker_count < markers_to_destination)
             {
                 drive_left();
                 count_marker(LEFT);
             }
-            // while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_right();
-            // }
-            // while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
-            // {
-            //     swing_right();
-            // }
+
+            dock(RIGHT);
+            break;
+
+        case 2:
+            reverse_left();
+            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
 
             stop();
+
+            markers_to_destination = 1;
+            while (marker_count < markers_to_destination)
+            {
+                drive_right();
+                count_marker(RIGHT);
+            }
+
+            dock(LEFT);
+            break;
+
+        case 3:
+            reverse_right();
+            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+            while (get_sensor(LEFT) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT) < SENSOR_THRESHOLD);
+
+            markers_to_destination = 1;
+            while (marker_count < markers_to_destination)
+            {
+                drive_left();
+                count_marker(LEFT);
+            }
+
+            dock(RIGHT);
             break;
 
         default:
@@ -204,6 +225,7 @@ void go_to_destination(unsigned char destination)
     }
 
     stop();
+    _delay(2000000);
 }
 
 void scan_barcode(void)
@@ -252,30 +274,15 @@ void scan_barcode(void)
 
     _delay(2000000);
 
-    while (1)
+	for (int i = 0; i < destination + 2; i++)
     {
-        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
-        {
-            swing_left();
-        }
-
-        stop();
-        break;
+        while (get_sensor(RIGHT) > SENSOR_THRESHOLD);
+        reverse();
+        while (get_sensor(RIGHT) < SENSOR_THRESHOLD);
     }
+    _delay(250000);
 
-    while (1)
-    {
-        left_sensor = get_sensor(LEFT_SENSOR);
-        right_sensor = get_sensor(RIGHT_SENSOR);
-
-        drive_right();
-
-        if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
-        {
-            stop();
-            break;
-        }
-    }
+    stop();
 }
 
 void adjust_position(void)

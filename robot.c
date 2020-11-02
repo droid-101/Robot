@@ -34,8 +34,9 @@ void test(void);
 void drive_right(void);
 void drive_left(void);
 void count_marker(enum Direction direction);
+void start(void);
 void leave(enum Direction direction);
-void enter(void);
+void enter(enum Direction direction);
 void adjust_position(void);
 void scan_barcode(void);
 void go_to_destination(unsigned char destination);
@@ -85,17 +86,9 @@ void main(void)
 
         // ================ START =============== //
 
-        leave(RIGHT);
+        start();
 
-        markers_to_destination = 2;
-
-        while (marker_count < markers_to_destination)
-        {
-          drive_right();
-          count_marker(RIGHT);
-        }
-
-        enter();
+        enter(RIGHT);
         adjust_position();
 
         scan_barcode();
@@ -118,7 +111,7 @@ void go_home(unsigned char destination)
             while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
             while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
 
-            enter();
+            enter(RIGHT);
 
             forward();
             _delay(ENTER_EXIT_DELAY);
@@ -128,12 +121,78 @@ void go_home(unsigned char destination)
                 turn_right();
             }
 
-            stop();
+            break;
+
+        case 1:
+            turn_left();
+            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+
+            enter(LEFT);
+
+            forward();
+            _delay(ENTER_EXIT_DELAY);
+
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+            {
+                turn_left();
+            }
+
+            break;
+
+        case 2:
+            turn_right();
+            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+
+            marker_count = 0;
+            while (marker_count < 1)
+            {
+                drive_right();
+                count_marker(RIGHT);
+            }
+
+            enter(RIGHT);
+
+            forward();
+            _delay(ENTER_EXIT_DELAY);
+
+            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+            {
+                turn_right();
+            }
+
+            break;
+
+        case 3:
+            turn_left();
+            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+
+            marker_count = 0;
+            while (marker_count < 1)
+            {
+                drive_left();
+                count_marker(LEFT);
+            }
+
+            enter(LEFT);
+
+            forward();
+            _delay(ENTER_EXIT_DELAY);
+
+            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+            {
+                turn_left();
+            }
+
             break;
 
         default:
             break;
     }
+
+    stop();
 }
 
 void dock(enum Direction direction)
@@ -311,21 +370,15 @@ void adjust_position(void)
         turn_right();
     }
 
-    stop();
-
     while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD && get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
     {
         forward();
     }
 
-    stop();
-
     while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
     {
         swing_right();
     }
-
-    stop();
 
     while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
     {
@@ -352,22 +405,39 @@ void adjust_position(void)
     _delay(1000000);
 }
 
-void enter(void)
+void enter(enum Direction direction)
 {
-    while (1)
+    if (direction == RIGHT)
     {
-        left_sensor = get_sensor(LEFT_SENSOR);
-        right_sensor = get_sensor(RIGHT_SENSOR);
-
-        drive_right();
-
-        if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
+        while (1)
         {
-            return;
+            drive_right();
+
+            left_sensor = get_sensor(LEFT_SENSOR);
+            right_sensor = get_sensor(RIGHT_SENSOR);
+
+            if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
+            {
+                return;
+            }
+        }
+
+    }
+    else if (direction == LEFT)
+    {
+        while (1)
+        {
+            drive_left();
+
+            left_sensor = get_sensor(LEFT_SENSOR);
+            right_sensor = get_sensor(RIGHT_SENSOR);
+
+            if (left_sensor > SENSOR_THRESHOLD && right_sensor > SENSOR_THRESHOLD)
+            {
+                return;
+            }
         }
     }
-
-    stop();
 }
 
 void leave(enum Direction direction)
@@ -390,6 +460,23 @@ void leave(enum Direction direction)
         {
             turn_left();
         }
+    }
+}
+
+void start(void)
+{
+    forward();
+    while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+    while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+
+    leave(RIGHT);
+
+    markers_to_destination = 2;
+
+    while (marker_count < markers_to_destination)
+    {
+        drive_right();
+        count_marker(RIGHT);
     }
 }
 

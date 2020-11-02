@@ -12,7 +12,6 @@
 #define MAX_WIDTH            15
 #define ENTER_EXIT_DELAY     750000
 
-
 __CONFIG( FOSC_INTRCIO & WDTE_OFF & PWRTE_OFF & MCLRE_OFF & CP_OFF & CPD_OFF & BOREN_OFF & IESO_OFF & FCMEN_OFF );
 
 enum Sensor {RIGHT_SENSOR, LEFT_SENSOR};
@@ -20,6 +19,8 @@ enum Direction {RIGHT, LEFT};
 
 void init_hardware(void);
 int get_sensor(enum Sensor side);
+char black(int reading);
+char white(int reading);
 void reset_barcode_width(void);
 void stop(void);
 void forward(void);
@@ -66,6 +67,8 @@ void main(void)
 
     ADCON0 = 0b00000001;
 
+    stop();
+
     while((RA5 == 0))
     {
         left_sensor = 0;
@@ -108,15 +111,15 @@ void go_home(unsigned char destination)
     {
         case 0:
             turn_right();
-            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (black(get_sensor(RIGHT_SENSOR)));
+            while (white(get_sensor(RIGHT_SENSOR)));
 
             enter(RIGHT);
 
             forward();
             _delay(ENTER_EXIT_DELAY);
 
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+            while (white(get_sensor(RIGHT_SENSOR)))
             {
                 turn_right();
             }
@@ -125,15 +128,15 @@ void go_home(unsigned char destination)
 
         case 1:
             turn_left();
-            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (black(get_sensor(LEFT_SENSOR)));
+            while (white(get_sensor(LEFT_SENSOR)));
 
             enter(LEFT);
 
             forward();
             _delay(ENTER_EXIT_DELAY);
 
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+            while (white(get_sensor(LEFT_SENSOR)))
             {
                 turn_left();
             }
@@ -142,8 +145,8 @@ void go_home(unsigned char destination)
 
         case 2:
             turn_right();
-            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (black(get_sensor(RIGHT_SENSOR)));
+            while (white(get_sensor(RIGHT_SENSOR)));
 
             marker_count = 0;
             while (marker_count < 1)
@@ -157,7 +160,7 @@ void go_home(unsigned char destination)
             forward();
             _delay(ENTER_EXIT_DELAY);
 
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+            while (white(get_sensor(RIGHT_SENSOR)))
             {
                 turn_right();
             }
@@ -166,8 +169,8 @@ void go_home(unsigned char destination)
 
         case 3:
             turn_left();
-            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (black(get_sensor(LEFT_SENSOR)));
+            while (white(get_sensor(LEFT_SENSOR)));
 
             marker_count = 0;
             while (marker_count < 1)
@@ -181,7 +184,7 @@ void go_home(unsigned char destination)
             forward();
             _delay(ENTER_EXIT_DELAY);
 
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+            while (white(get_sensor(LEFT_SENSOR)))
             {
                 turn_left();
             }
@@ -203,12 +206,12 @@ void dock(enum Direction direction)
 
         _delay(ENTER_EXIT_DELAY);
 
-        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(RIGHT_SENSOR)))
         {
             turn_right();
         }
 
-        while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(LEFT_SENSOR)))
         {
             swing_right();
         }
@@ -219,12 +222,12 @@ void dock(enum Direction direction)
 
         _delay(ENTER_EXIT_DELAY);
 
-        while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(LEFT_SENSOR)))
         {
             turn_left();
         }
 
-        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(RIGHT_SENSOR)))
         {
             swing_left();
         }
@@ -240,9 +243,9 @@ void go_to_destination(unsigned char destination)
     {
         case 0:
             reverse_left();
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (white(get_sensor(RIGHT_SENSOR)));
+            while (black(get_sensor(RIGHT_SENSOR)));
+            while (white(get_sensor(RIGHT_SENSOR)));
 
             stop();
 
@@ -258,9 +261,9 @@ void go_to_destination(unsigned char destination)
 
         case 1:
             reverse_right();
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (white(get_sensor(LEFT_SENSOR)));
+            while (black(get_sensor(LEFT_SENSOR)));
+            while (white(get_sensor(LEFT_SENSOR)));
 
             markers_to_destination = 2;
             while (marker_count < markers_to_destination)
@@ -274,9 +277,9 @@ void go_to_destination(unsigned char destination)
 
         case 2:
             reverse_left();
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD);
+            while (white(get_sensor(RIGHT_SENSOR)));
+            while (black(get_sensor(RIGHT_SENSOR)));
+            while (white(get_sensor(RIGHT_SENSOR)));
 
             stop();
 
@@ -292,9 +295,9 @@ void go_to_destination(unsigned char destination)
 
         case 3:
             reverse_right();
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
-            while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
+            while (white(get_sensor(LEFT_SENSOR)));
+            while (black(get_sensor(LEFT_SENSOR)));
+            while (white(get_sensor(LEFT_SENSOR)));
 
             markers_to_destination = 1;
             while (marker_count < markers_to_destination)
@@ -321,9 +324,9 @@ void scan_barcode(void)
         width = 0;
         forward();
 
-        if (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
+        if (black(get_sensor(RIGHT_SENSOR)))
         {
-            while (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
+            while (black(get_sensor(RIGHT_SENSOR)))
             {
                 width++;
                 barcode_width[barcode] = width;
@@ -365,7 +368,7 @@ void adjust_position(void)
     forward();
     _delay(ENTER_EXIT_DELAY);
 
-    while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+    while (white(get_sensor(RIGHT_SENSOR)))
     {
         turn_right();
     }
@@ -375,12 +378,12 @@ void adjust_position(void)
         forward();
     }
 
-    while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+    while (white(get_sensor(LEFT_SENSOR)))
     {
         swing_right();
     }
 
-    while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+    while (white(get_sensor(RIGHT_SENSOR)))
     {
         swing_left();
     }
@@ -388,7 +391,7 @@ void adjust_position(void)
 	stop();
     _delay(1000000);
 
-	while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD)
+	while (black(get_sensor(LEFT_SENSOR)))
     {
         reverse_right();
     }
@@ -396,7 +399,7 @@ void adjust_position(void)
     stop();
 	_delay(1000000);
 
-    while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+    while (white(get_sensor(LEFT_SENSOR)))
     {
         reverse_left();
     }
@@ -443,20 +446,24 @@ void enter(enum Direction direction)
 void leave(enum Direction direction)
 {
     forward();
-    while (!(get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD && get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD));
+    while (!(black(right_sensor)) && black(get_sensor(left_sensor)))
+    {
+        right_sensor = get_sensor(RIGHT_SENSOR);
+        left_sensor = get_sensor(LEFT_SENSOR);
+    }
 
     _delay(ENTER_EXIT_DELAY);
 
     if (direction == RIGHT)
     {
-        while (get_sensor(RIGHT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(RIGHT_SENSOR)))
         {
             turn_right();
         }
     }
     else if (direction == LEFT)
     {
-        while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD)
+        while (white(get_sensor(LEFT_SENSOR)))
         {
             turn_left();
         }
@@ -466,8 +473,8 @@ void leave(enum Direction direction)
 void start(void)
 {
     forward();
-    while (get_sensor(LEFT_SENSOR) < SENSOR_THRESHOLD);
-    while (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD);
+    while (white(get_sensor(LEFT_SENSOR)));
+    while (black(get_sensor(LEFT_SENSOR)));
 
     leave(RIGHT);
 
@@ -484,10 +491,10 @@ void count_marker(enum Direction direction)
 {
     if (direction == RIGHT)
     {
-        if (get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD)
+        if (black(get_sensor(LEFT_SENSOR)))
         {
             marker_count++;
-            while(get_sensor(LEFT_SENSOR) > SENSOR_THRESHOLD)
+            while(black(get_sensor(LEFT_SENSOR)))
             {
                 drive_right();
             }
@@ -495,10 +502,10 @@ void count_marker(enum Direction direction)
     }
     else if (direction == LEFT)
     {
-        if (get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
+        if (black(get_sensor(RIGHT_SENSOR)))
         {
             marker_count++;
-            while(get_sensor(RIGHT_SENSOR) > SENSOR_THRESHOLD)
+            while(black(get_sensor(RIGHT_SENSOR)))
             {
                 drive_left();
             }
@@ -621,6 +628,30 @@ void reset_barcode_width(void)
     for (int i = 0; i < 5; i++)
     {
         barcode_width[i] = 0;
+    }
+}
+
+char black(int reading)
+{
+    if (reading > SENSOR_THRESHOLD)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+char white(int reading)
+{
+    if (reading < SENSOR_THRESHOLD)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
     }
 }
 

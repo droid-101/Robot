@@ -427,41 +427,29 @@ void adjust_position(void)
     forward();
     _delay(ENTER_EXIT_DELAY);
 
-    while (white(get_sensor(RIGHT_SENSOR)))
-    {
-        turn_right();
-    }
+    turn_right();
+    while (white(get_sensor(RIGHT_SENSOR)));
 
-    while (white(get_sensor(RIGHT_SENSOR)) && white(get_sensor(LEFT_SENSOR)))
-    {
-        forward();
-    }
+    forward();
+    while (white(get_sensor(RIGHT_SENSOR)) && white(get_sensor(LEFT_SENSOR)));
 
-    while (white(get_sensor(LEFT_SENSOR)))
-    {
-        swing_right();
-    }
+    swing_right();
+    while (white(get_sensor(LEFT_SENSOR)));
 
-    while (white(get_sensor(RIGHT_SENSOR)))
-    {
-        swing_left();
-    }
+    swing_left();
+    while (white(get_sensor(RIGHT_SENSOR)));
 
 	stop();
     _delay(1000000);
 
-	while (black(get_sensor(LEFT_SENSOR)))
-    {
-        reverse_right();
-    }
+    reverse_right();
+	while (black(get_sensor(LEFT_SENSOR)));
 
     stop();
 	_delay(1000000);
 
-    while (white(get_sensor(LEFT_SENSOR)))
-    {
-        reverse_left();
-    }
+    reverse_left();
+    while (white(get_sensor(LEFT_SENSOR)));
 
 	stop();
     _delay(1000000);
@@ -534,17 +522,13 @@ void leave(enum Direction direction)
 
     if (direction == RIGHT)
     {
-        while (white(get_sensor(RIGHT_SENSOR)))
-        {
-            turn_right();
-        }
+        turn_right();
+        while (white(get_sensor(RIGHT_SENSOR)));
     }
     else if (direction == LEFT)
     {
-        while (white(get_sensor(LEFT_SENSOR)))
-        {
-            turn_left();
-        }
+        turn_left();
+        while (white(get_sensor(LEFT_SENSOR)));
     }
 }
 
